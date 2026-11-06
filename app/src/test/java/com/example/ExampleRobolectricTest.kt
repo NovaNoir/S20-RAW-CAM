@@ -125,32 +125,59 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun s20Ultra_cameraAspectRatiosAndLenses() {
-        // Verify S20 Ultra native aspect ratios
-        val ratios = com.example.ui.screens.S20UltraAspectRatio.entries
-        assertEquals(4, ratios.size)
-        val full20x9 = com.example.ui.screens.S20UltraAspectRatio.RATIO_FULL
-        assertEquals(9f, full20x9.ratioWidth, 0.001f)
-        assertEquals(20f, full20x9.ratioHeight, 0.001f)
+    fun s20Ultra_expertRawModuleSpecs() {
+        assertEquals("com.samsung.android.app.galaxyraw", com.example.ui.screens.EXPERT_RAW_PACKAGE)
 
-        val native3x4 = com.example.ui.screens.S20UltraAspectRatio.RATIO_3_4
-        assertEquals(3f, native3x4.ratioWidth, 0.001f)
-        assertEquals(4f, native3x4.ratioHeight, 0.001f)
-
-        // Verify S20 Ultra triple-lens configuration
-        val lenses = com.example.ui.screens.S20UltraLens.entries
+        val lenses = com.example.ui.screens.S20UltraLensModule.entries
         assertEquals(3, lenses.size)
-        val ultraWide = com.example.ui.screens.S20UltraLens.ULTRA_WIDE
-        assertEquals("0.5", ultraWide.zoomLabel)
-        assertEquals("13mm", ultraWide.focalMm)
 
-        val wide108 = com.example.ui.screens.S20UltraLens.WIDE_108MP
-        assertEquals("1.0", wide108.zoomLabel)
-        assertEquals("24mm", wide108.focalMm)
+        val ultraWide = com.example.ui.screens.S20UltraLensModule.ULTRA_WIDE
+        assertEquals("UW (0.5x)", ultraWide.dialLabel)
+        assertEquals("13mm equiv.", ultraWide.focalMm)
+        assertEquals("f/2.2", ultraWide.aperture)
 
-        val periscope = com.example.ui.screens.S20UltraLens.TELE_PERISCOPE
-        assertEquals("5.0", periscope.zoomLabel)
-        assertEquals("103mm", periscope.focalMm)
+        val wide108 = com.example.ui.screens.S20UltraLensModule.WIDE_108MP
+        assertEquals("W (1.0x)", wide108.dialLabel)
+        assertEquals("26mm equiv.", wide108.focalMm)
+        assertEquals("f/1.8", wide108.aperture)
+
+        val periscope = com.example.ui.screens.S20UltraLensModule.TELE_PERISCOPE
+        assertEquals("T (4.0x/5.0x)", periscope.dialLabel)
+        assertEquals("103mm equiv.", periscope.focalMm)
+        assertEquals("f/3.5", periscope.aperture)
+        assertTrue(periscope.sensorSpec.contains("4× Optical Baseline"))
+    }
+
+    @Test
+    fun errorLogger_filePersistenceAndRead() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val logger = com.example.util.ErrorLogger
+
+        // Clear any previous logs
+        logger.clearLogs(context)
+
+        // Log a test warning and error with exception
+        logger.logWarning("TEST_TAG", "Sample warning for diagnostics", context)
+        val dummyException = IllegalStateException("Simulated camera connection timeout")
+        logger.logError("CAMERA_SUBSYSTEM", "Failed to communicate with sensor", dummyException, context)
+
+        // Verify log file exists in internal storage
+        val logFile = logger.getLogFile(context)
+        assertTrue(logFile.exists())
+        assertTrue(logFile.length() > 0)
+
+        // Read logs and verify content
+        val logOutput = logger.readLogs(context)
+        assertTrue(logOutput.contains("S20-RAW-CAM DIAGNOSTIC REPORT"))
+        assertTrue(logOutput.contains("Sample warning for diagnostics"))
+        assertTrue(logOutput.contains("Simulated camera connection timeout"))
+        assertTrue(logOutput.contains("CAMERA_SUBSYSTEM"))
+
+        // Test clearing logs
+        val cleared = logger.clearLogs(context)
+        assertTrue(cleared)
+        val afterClear = logger.readLogs(context)
+        assertFalse(afterClear.contains("Simulated camera connection timeout"))
     }
 }
 

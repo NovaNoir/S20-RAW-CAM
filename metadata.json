@@ -1,6 +1,6 @@
 {
   "name": "Camera Presets",
-  "description": "Samsung S20 Ultra Expert RAW 1,008-preset master field guide with 56 scene families, reciprocity calculator, and live camera viewfinder assistant.",
+  "description": "Samsung Galaxy S20 Ultra companion field guide for Samsung Expert RAW, featuring 1,008 scene recipes, manual dial checklists, exposure calculators, and direct app hand-off.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

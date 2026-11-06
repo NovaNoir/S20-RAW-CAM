@@ -15,8 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,7 +43,7 @@ import com.example.data.CameraPreset
 import com.example.data.db.AppDatabase
 import com.example.data.db.RoomPresetRepository
 import com.example.ui.PresetViewModel
-import com.example.ui.screens.CameraViewfinderScreen
+import com.example.ui.screens.ExpertRawCompanionScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.screens.ExposureCalculatorScreen
 import com.example.ui.screens.FieldGuideScreen
@@ -52,7 +53,7 @@ import com.example.ui.theme.MyApplicationTheme
 
 enum class AppTab(val label: String, val icon: ImageVector, val tag: String) {
     PRESETS("Presets", Icons.Filled.Camera, "nav_presets"),
-    VIEWFINDER("Viewfinder", Icons.Filled.CenterFocusStrong, "nav_viewfinder"),
+    COMPANION("Companion", Icons.Filled.Tune, "nav_companion"),
     FIELD_GUIDE("Field Guide", Icons.Filled.MenuBook, "nav_guide"),
     CALCULATOR("EV Tool", Icons.Filled.Calculate, "nav_calculator")
 }
@@ -61,6 +62,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        com.example.util.ErrorLogger.init(applicationContext)
 
         val database = AppDatabase.getDatabase(applicationContext)
         val repository = RoomPresetRepository(database.presetDao())
@@ -75,8 +78,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainApp(repository: RoomPresetRepository) {
-    var currentTab by remember { mutableStateOf(AppTab.PRESETS) }
-    var viewfinderPreset by remember { mutableStateOf<CameraPreset?>(null) }
+    var currentTab by rememberSaveable { mutableStateOf(AppTab.PRESETS) }
+    var selectedPresetId by rememberSaveable { mutableIntStateOf(1) }
     val presetViewModel: PresetViewModel = viewModel(
         factory = PresetViewModel.Factory(repository)
     )
@@ -143,14 +146,17 @@ fun MainApp(repository: RoomPresetRepository) {
                     PresetsListScreen(
                         viewModel = presetViewModel,
                         onOpenInCamera = { preset ->
-                            viewfinderPreset = preset
-                            currentTab = AppTab.VIEWFINDER
+                            selectedPresetId = preset.id
+                            currentTab = AppTab.COMPANION
                         }
                     )
                 }
-                AppTab.VIEWFINDER -> {
-                    CameraViewfinderScreen(
-                        initialPreset = viewfinderPreset
+                AppTab.COMPANION -> {
+                    ExpertRawCompanionScreen(
+                        initialPresetId = selectedPresetId,
+                        onSelectPreset = { id ->
+                            selectedPresetId = id
+                        }
                     )
                 }
                 AppTab.FIELD_GUIDE -> {

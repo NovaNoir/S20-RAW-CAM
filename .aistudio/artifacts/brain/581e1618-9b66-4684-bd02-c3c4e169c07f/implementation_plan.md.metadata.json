@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan addressing the Static QA Audit findings for S20-RAW-CAM: pivoting the viewfinder into a zero-permission Expert RAW manual-entry companion checklist, implementing Samsung Expert RAW app/store launch intents, removing destructive Room migration, fixing S20 Ultra hardware specifications, and ensuring state preservation.",
+  "updatedAt": "2026-11-06T14:23:06.709656083Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

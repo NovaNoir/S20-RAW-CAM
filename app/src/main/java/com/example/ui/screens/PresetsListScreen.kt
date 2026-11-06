@@ -29,20 +29,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NorthWest
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -74,6 +80,8 @@ import com.example.data.CameraPreset
 import com.example.data.PresetCategory
 import com.example.data.SceneFamilyInfo
 import com.example.ui.PresetViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.example.ui.components.LogViewerDialog
 import com.example.ui.components.PresetCard
 import com.example.ui.components.PresetDetailDialog
 import com.example.ui.components.SceneFamiliesBrowser
@@ -90,9 +98,12 @@ fun PresetsListScreen(
     onSelectThemeMode: (AppThemeMode) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedPresetForDetail by remember { mutableStateOf<CameraPreset?>(null) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+    var showLogDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -184,6 +195,64 @@ fun PresetsListScreen(
                                 tint = AppTheme.colors.textSecondary,
                                 modifier = Modifier.size(15.dp)
                             )
+                        }
+
+                        // More Options Menu (Export Error Logs, Diagnostics)
+                        Box {
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(AppTheme.colors.surfaceVariant)
+                                    .border(0.5.dp, AppTheme.colors.border, CircleShape)
+                                    .testTag("menu_more_btn")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = "Options Menu",
+                                    tint = AppTheme.colors.textSecondary,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Export Error Logs", fontSize = 13.sp) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Filled.Share,
+                                            contentDescription = null,
+                                            tint = AppTheme.colors.amberPrimary,
+                                            modifier = Modifier.size(17.dp)
+                                        )
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        com.example.util.ErrorLogger.exportLogs(context)
+                                    },
+                                    modifier = Modifier.testTag("menu_export_logs")
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Diagnostic Logs", fontSize = 13.sp) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Filled.BugReport,
+                                            contentDescription = null,
+                                            tint = AppTheme.colors.cyanAccent,
+                                            modifier = Modifier.size(17.dp)
+                                        )
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        showLogDialog = true
+                                    },
+                                    modifier = Modifier.testTag("menu_view_diagnostics")
+                                )
+                            }
                         }
 
                         // Count Badge
@@ -717,6 +786,13 @@ fun PresetsListScreen(
                     onSelectThemeMode(mode)
                 },
                 onDismiss = { showThemeDialog = false }
+            )
+        }
+
+        // Diagnostic Error Log Viewer Dialog
+        if (showLogDialog) {
+            LogViewerDialog(
+                onDismiss = { showLogDialog = false }
             )
         }
     }
